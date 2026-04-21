@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 require('dotenv').config();
 
 const appointmentRoutes = require('./routes/appointments');
@@ -27,9 +26,6 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Atlas connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// ── Serve static frontend
-app.use(express.static(path.join(__dirname, 'public')));
-
 // ── API Routes
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/admin', adminRoutes);
@@ -37,11 +33,6 @@ app.use('/api/payments', paymentRoutes);
 
 // ── Health check
 app.get('/api/health', (req, res) => res.json({ status: 'K-Dentrix API is running 🦷', time: new Date() }));
-
-// ── Catch-all: serve frontend
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // ── Error handler
 app.use((err, req, res, next) => {
