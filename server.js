@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const appointmentRoutes = require('./routes/appointments');
@@ -33,6 +34,9 @@ app.use('/api/payments', paymentRoutes);
 
 // ── Health check
 app.get('/api/health', (req, res) => res.json({ status: 'K-Dentrix API is running 🦷', time: new Date() }));
+
+// ── Admin dashboard UI
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 // ── Error handler
 app.use((err, req, res, next) => {
