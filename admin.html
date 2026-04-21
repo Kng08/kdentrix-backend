@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Dentrix Admin Dashboard</title>
+<style>
+  :root {
+    --teal: #1B6B6B; --teal-light: #2A9090; --teal-pale: #E6F4F4;
+    --deep: #1A1A2E; --gold: #C9A84C;
+    --cream: #FAF8F4; --white: #fff;
+    --text: #2C2C2C; --muted: #7A7A7A; --border: #E0D9CC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #F0F2F5; color: var(--text); }
+
+  /* LOGIN */
+  #loginPage { display:flex; align-items:center; justify-content:center; min-height:100vh; background: linear-gradient(135deg, var(--deep), #1B3A3A); }
+  .login-card { background: white; border-radius: 20px; padding: 40px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .login-logo { text-align: center; margin-bottom: 28px; }
+  .login-logo h1 { font-size: 1.8rem; color: var(--teal); }
+  .login-logo p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .form-group input { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 0.92rem; outline: none; transition: border .2s; }
+  .form-group input:focus { border-color: var(--teal); }
+  .btn-login { width: 100%; background: var(--teal); color: white; border: none; border-radius: 10px; padding: 13px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background .2s; margin-top: 8px; }
+  .btn-login:hover { background: var(--teal-light); }
+  .login-error { color: #c0392b; font-size: 0.83rem; text-align: center; margin-top: 12px; display: none; }
+
+  /* DASHBOARD */
+  #dashboardPage { display: none; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+    background: var(--deep); padding: 24px 0; z-index: 100;
+    display: flex; flex-direction: column;
+  }
+  .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 16px; }
+  .sidebar-logo h2 { color: white; font-size: 1.3rem; }
+  .sidebar-logo span { color: var(--teal-light); }
+  .sidebar-logo p { color: rgba(255,255,255,0.4); font-size: 0.75rem; margin-top: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: rgba(255,255,255,0.6); cursor: pointer; transition: all .2s; font-size: 0.88rem; border-left: 3px solid transparent; }
+  .nav-item:hover, .nav-item.active { color: white; background: rgba(255,255,255,0.06); border-left-color: var(--teal-light); }
+  .nav-item .icon { font-size: 1.1rem; width: 20px; }
+  .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .admin-info { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 10px; }
+  .btn-logout { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 0.82rem; transition: background .2s; }
+  .btn-logout:hover { background: rgba(255,0,0,0.2); color: white; }
+
+  .main { margin-left: 240px; padding: 28px; min-height: 100vh; }
+  .page-header { margin-bottom: 24px; }
+  .page-header h1 { font-size: 1.4rem; font-weight: 700; }
+  .page-header p { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border-radius: 14px; padding: 20px; border: 1px solid var(--border); }
+  .stat-card .s-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .stat-card .s-num { font-size: 2rem; font-weight: 700; color: var(--deep); line-height: 1; }
+  .stat-card .s-icon { font-size: 1.5rem; float: right; margin-top: -4px; }
+  .stat-card.teal .s-num { color: var(--teal); }
+  .stat-card.gold .s-num { color: var(--gold); }
+  .stat-card.green .s-num { color: #27ae60; }
+  .stat-card.red .s-num { color: #c0392b; }
+
+  /* TABLE */
+  .card { background: white; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; }
+  .card-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: gap; }
+  .card-header h3 { font-size: 0.95rem; font-weight: 700; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+  .filter-select, .search-input { border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; font-size: 0.83rem; outline: none; }
+  .filter-select:focus, .search-input:focus { border-color: var(--teal); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  th { background: #F8F9FA; padding: 10px 14px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  td { padding: 12px 14px; border-top: 1px solid #F0F0F0; vertical-align: middle; }
+  tr:hover td { background: #FAFAFA; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 50px; font-size: 0.73rem; font-weight: 600; }
+  .badge.pending  { background: #fff3cd; color: #856404; }
+  .badge.confirmed{ background: #d1fae5; color: #065f46; }
+  .badge.cancelled{ background: #fee2e2; color: #991b1b; }
+  .badge.completed{ background: #dbeafe; color: #1e40af; }
+  .badge.unpaid   { background: #f3f4f6; color: #6b7280; }
+  .badge.deposit_paid { background: #d1fae5; color: #065f46; }
+  .action-btns { display: flex; gap: 6px; }
+  .btn-sm { border: none; border-radius: 6px; padding: 5px 10px; font-size: 0.75rem; cursor: pointer; font-weight: 500; transition: opacity .2s; }
+  .btn-sm:hover { opacity: 0.8; }
+  .btn-confirm  { background: #d1fae5; color: #065f46; }
+  .btn-cancel   { background: #fee2e2; color: #991b1b; }
+  .btn-complete { background: #dbeafe; color: #1e40af; }
+  .btn-delete   { background: #f3f4f6; color: #6b7280; }
+  .pagination { display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); }
+  .page-btn { border: 1px solid var(--border); background: white; border-radius: 6px; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; transition: all .2s; }
+  .page-btn:hover, .page-btn.active { background: var(--teal); color: white; border-color: var(--teal); }
+  .no-data { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: white; padding: 12px 20px; border-radius: 10px; font-size: 0.88rem; transform: translateY(60px); opacity: 0; transition: all .35s; z-index: 9999; max-width: 300px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: #c0392b; }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .sidebar-logo, .nav-item span, .sidebar-footer .admin-info, .btn-logout { display: none; }
+    .main { margin-left: 60px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>🦷 K-Dentrix</h1>
+      <p>Admin Dashboard — Staff Login</p>
+    </div>
+    <div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" placeholder="admin@kdentrix.com"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" onclick="doLogin()">Sign In to Dashboard</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="dashboardPage">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h2>K-<span>Dentrix</span></h2>
+      <p>Admin Panel</p>
+    </div>
+    <div class="nav-item active" onclick="showSection('overview')"><span class="icon">📊</span><span>Overview</span></div>
+    <div class="nav-item" onclick="showSection('appointments')"><span class="icon">📋</span><span>Appointments</span></div>
+    <div class="nav-item" onclick="showSection('pending')"><span class="icon">⏳</span><span>Pending</span></div>
+    <div class="nav-item" onclick="showSection('payments')"><span class="icon">💳</span><span>Payments</span></div>
+    <div class="sidebar-footer">
+      <div class="admin-info" id="adminName">Admin</div>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="main" id="mainContent">
+    <!-- Content injected by JS -->
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api';
+let token = localStorage.getItem('kdx_token');
+let currentAdmin = null;
+
+// ── Init
+window.onload = () => {
+  if (token) { showDashboard(); loadOverview(); }
+};
+
+// ── Login
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  try {
+    const res = await fetch(`${API}/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) });
+    const data = await res.json();
+    if (!data.success) { errEl.textContent = data.message; errEl.style.display = 'block'; return; }
+    token = data.token;
+    currentAdmin = data.admin;
+    localStorage.setItem('kdx_token', token);
+    showDashboard();
+    loadOverview();
+  } catch { errEl.textContent = 'Connection error. Is the server running?'; errEl.style.display = 'block'; }
+}
+
+function showDashboard() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('dashboardPage').style.display = 'block';
+  if (currentAdmin) document.getElementById('adminName').textContent = currentAdmin.name;
+}
+
+function doLogout() {
+  localStorage.removeItem('kdx_token');
+  token = null;
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('dashboardPage').style.display = 'none';
+}
+
+function authHeaders() { return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }; }
+
+// ── Navigation
+function showSection(s) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  if (s === 'overview')     loadOverview();
+  if (s === 'appointments') loadAppointments('all');
+  if (s === 'pending')      loadAppointments('pending');
+  if (s === 'payments')     loadAppointments('all', true);
+}
+
+// ── Overview
+async function loadOverview() {
+  document.getElementById('mainContent').innerHTML = '<div class="loading">Loading dashboard…</div>';
+  try {
+    const res = await fetch(`${API}/admin/dashboard`, { headers: authHeaders() });
+    const data = await res.json();
+    if (!data.success) { doLogout(); return; }
+    const { stats, recent } = data;
+    document.getElementById('mainContent').innerHTML = `
+      <div class="page-header"><h1>Dashboard Overview</h1><p>Welcome back! Here's what's happening at K-Dentrix today.</p></div>
+      <div class="stats-grid">
+        <div class="stat-card teal"><div class="s-label">Total Bookings</div><span class="s-icon">📋</span><div class="s-num">${stats.total}</div></div>
+        <div class="stat-card"><div class="s-label">Today's Appointments</div><span class="s-icon">📅</span><div class="s-num">${stats.todayCount}</div></div>
+        <div class="stat-card gold"><div class="s-label">Pending Confirmation</div><span class="s-icon">⏳</span><div class="s-num">${stats.pending}</div></div>
+        <div class="stat-card green"><div class="s-label">Confirmed</div><span class="s-icon">✅</span><div class="s-num">${stats.confirmed}</div></div>
+        <div class="stat-card green"><div class="s-label">Completed</div><span class="s-icon">🎉</span><div class="s-num">${stats.completed}</div></div>
+        <div class="stat-card red"><div class="s-label">Cancelled</div><span class="s-icon">❌</span><div class="s-num">${stats.cancelled}</div></div>
+        <div class="stat-card teal"><div class="s-label">Deposits Paid</div><span class="s-icon">💳</span><div class="s-num">${stats.depositPaid}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Recent Bookings</h3><button class="page-btn" onclick="loadAppointments('all')">View All →</button></div>
+        <table><thead><tr><th>Ref</th><th>Patient</th><th>Service</th><th>Date</th><th>Time</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead>
+        <tbody>${recent.map(a => appointmentRow(a)).join('')}</tbody></table>
+      </div>`;
+  } catch { showToast('Failed to load dashboard', true); }
+}
+
+// ── Appointments Table
+async function loadAppointments(statusFilter = 'all', paymentsOnly = false) {
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header"><h1>${paymentsOnly ? 'Payments' : 'Appointments'}</h1><p>Manage all patient bookings.</p></div>
+    <div class="card">
+      <div class="card-header">
+        <h3>${paymentsOnly ? 'Payment Records' : 'All Appointments'}</h3>
+        <div class="filters">
+          <input class="search-input" id="searchInput" placeholder="Search name, phone, ref…" oninput="filterTable()">
+          <select class="filter-select" id="statusFilter" onchange="filterTable()">
+            <option value="all">All Status</option>
+            <option value="pending" ${statusFilter==='pending'?'selected':''}>Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div id="tableBody"><div class="loading">Loading…</div></div>
+      <div class="pagination" id="pagination"></div>
+    </div>`;
+  await fetchAppointments(1, statusFilter);
+}
+
+async function fetchAppointments(page = 1, status = 'all', search = '') {
+  try {
+    const s = document.getElementById('statusFilter')?.value || status;
+    const q = document.getElementById('searchInput')?.value || search;
+    const res = await fetch(`${API}/admin/appointments?page=${page}&status=${s}&search=${encodeURIComponent(q)}`, { headers: authHeaders() });
+    const data = await res.json();
+    const tbody = document.getElementById('tableBody');
+    if (!data.appointments.length) { tbody.innerHTML = '<div class="no-data">No appointments found.</div>'; return; }
+    tbody.innerHTML = `<table><thead><tr><th>Ref</th><th>Patient</th><th>Phone</th><th>Service</th><th>Date & Time</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead><tbody>${data.appointments.map(a => appointmentRow(a)).join('')}</tbody></table>`;
+    // Pagination
+    const pg = document.getElementById('pagination');
+    pg.innerHTML = '';
+    for (let i = 1; i <= data.pages; i++) {
+      const b = document.createElement('button');
+      b.className = 'page-btn' + (i === data.currentPage ? ' active' : '');
+      b.textContent = i;
+      b.onclick = () => fetchAppointments(i);
+      pg.appendChild(b);
+    }
+  } catch { showToast('Failed to load appointments', true); }
+}
+
+function filterTable() { fetchAppointments(1); }
+
+function appointmentRow(a) {
+  return `<tr>
+    <td><strong>${a.bookingRef}</strong></td>
+    <td>${a.firstName} ${a.lastName}</td>
+    <td>${a.phone || '—'}</td>
+    <td>${a.service}</td>
+    <td>${a.date} <span style="color:#888">${a.time}</span></td>
+    <td><span class="badge ${a.status}">${a.status}</span></td>
+    <td><span class="badge ${a.paymentStatus}">${a.paymentStatus.replace('_',' ')}</span></td>
+    <td><div class="action-btns">
+      ${a.status==='pending'?`<button class="btn-sm btn-confirm" onclick="updateStatus('${a._id}','confirmed')">Confirm</button>`:''}
+      ${a.status!=='cancelled'&&a.status!=='completed'?`<button class="btn-sm btn-cancel" onclick="updateStatus('${a._id}','cancelled')">Cancel</button>`:''}
+      ${a.status==='confirmed'?`<button class="btn-sm btn-complete" onclick="updateStatus('${a._id}','completed')">Done</button>`:''}
+      <button class="btn-sm btn-delete" onclick="deleteAppt('${a._id}')">🗑</button>
+    </div></td>
+  </tr>`;
+}
+
+async function updateStatus(id, status) {
+  try {
+    const res = await fetch(`${API}/admin/appointments/${id}/status`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status }) });
+    const data = await res.json();
+    if (data.success) { showToast(`✅ Appointment marked as ${status}`); fetchAppointments(1); }
+    else showToast(data.message, true);
+  } catch { showToast('Update failed', true); }
+}
+
+async function deleteAppt(id) {
+  if (!confirm('Delete this appointment? This cannot be undone.')) return;
+  try {
+    const res = await fetch(`${API}/admin/appointments/${id}`, { method: 'DELETE', headers: authHeaders() });
+    const data = await res.json();
+    if (data.success) { showToast('🗑 Appointment deleted'); fetchAppointments(1); }
+    else showToast(data.message, true);
+  } catch { showToast('Delete failed', true); }
+}
+
+// ── Toast
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '') + ' show';
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
