@@ -43,6 +43,44 @@ router.post('/setup', async (req, res) => {
   }
 });
 
+// POST /api/admin/reset — Wipe all admins and create a fresh one
+router.post('/reset', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
+    }
+
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
+    }
+
+    // Minimum password length
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
+    }
+
+    // Clear every existing admin document
+    await Admin.deleteMany({});
+
+    // Create the new admin (password is hashed by the pre-save hook)
+    const admin = new Admin({ name, email, password });
+    await admin.save();
+
+    return res.status(201).json({
+      success: true,
+      message: 'Admin account reset successfully. You can now log in with the new credentials.',
+      admin: { name: admin.name, email: admin.email },
+    });
+  } catch (err) {
+    console.error('Reset error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to reset admin account.' });
+  }
+});
+
 // POST /api/admin/login — Admin login → returns JWT
 router.post('/login', async (req, res) => {
   try {
