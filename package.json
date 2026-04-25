@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "git clone https://github.com/Kng08/kdentrix-frontend.git temp-frontend && cd temp-frontend && npm install && npm run build && cd .. && cp -r temp-frontend/build public && rm -rf temp-frontend && npm install"
+    "build": "mkdir -p public && (git clone --depth 1 https://github.com/Kng08/kdentrix-frontend.git temp-frontend 2>/dev/null && cd temp-frontend && npm install && npm run build && cd .. && cp -r temp-frontend/build/* public/ && rm -rf temp-frontend || echo \"Frontend clone failed, using existing public folder\") && npm install"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

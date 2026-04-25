@@ -43,7 +43,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ── SPA fallback – send all non-API requests to React's index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    console.error('❌ public/index.html not found – frontend was not built or copied correctly');
+    res.status(503).send(`
+      <!DOCTYPE html>
+      <html>
+        <head><title>K-Dentrix – Unavailable</title></head>
+        <body style="font-family:sans-serif;text-align:center;padding:60px">
+          <h1>Frontend Unavailable</h1>
+          <p>The frontend assets could not be loaded. The API is still running.</p>
+          <p>Please check the build logs or contact support.</p>
+          <p><a href="/api/health">API Health Check</a></p>
+        </body>
+      </html>
+    `);
+  }
 });
 
 // ── Error handler
