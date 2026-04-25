@@ -38,6 +38,14 @@ app.get('/api/health', (req, res) => res.json({ status: 'K-Dentrix API is runnin
 // ── Admin dashboard UI
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
+// ── Serve React frontend static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ── SPA fallback – send all non-API requests to React's index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // ── Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
